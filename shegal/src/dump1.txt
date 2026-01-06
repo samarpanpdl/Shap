@@ -1,0 +1,448 @@
+import React,{useState,useEffect} from 'react'
+import './Payment.css'
+import { CartContext } from './Components/CartContext';
+import { useContext } from 'react';
+import {v4 as uuidv4} from "uuid";
+import CryptoJS from "crypto-js";
+
+const Payment = () => {
+    const { cart, fetchCart } = useContext(CartContext);
+    let pricewithdelivery = 0;
+    let totalAmount = 0;
+     for (let i = 0; i < (cart.items?.length || 0); i++) {
+        const item = cart.items[i];
+        const price = item.price || 0; // use item.price, not item.product.price
+        totalAmount += price * item.quantity;
+        pricewithdelivery = totalAmount + 120;
+  };
+   
+   //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    const [TheFormData, setTheFormData] = useState({
+        amount: pricewithdelivery,
+        tax_amount: "0",
+        total_amount: pricewithdelivery,
+        transaction_uuid: uuidv4(),
+        product_service_charge: "0",
+        product_delivery_charge: "0",
+        product_code: "EPAYTEST",
+        success_url: "http://localhost:5173/paymentsuccess",
+        failure_url: "http://localhost:5173/paymentfailure",
+        signed_field_names: "total_amount,transaction_uuid,product_code",
+        signature: "",
+        secret: "8gBm/:&EnhH.1/q",
+      });
+    
+      // generate signature function
+      const generateSignature = (
+        total_amount,
+        transaction_uuid,
+        product_code,
+        secret
+      ) => {
+        const hashString = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
+        const hash = CryptoJS.HmacSHA256(hashString, secret);
+        const hashedSignature = CryptoJS.enc.Base64.stringify(hash);
+        return hashedSignature;
+      };
+    
+      // useeffect
+      useEffect(() => {
+        const { total_amount, transaction_uuid, product_code, secret } = TheFormData;
+        const hashedSignature = generateSignature(
+          total_amount,
+          transaction_uuid,
+          product_code,
+          secret
+        );
+    
+        setTheFormData({ ...TheFormData, signature: hashedSignature });
+      }, [TheFormData.amount]);
+  
+  
+  return (
+    <>
+    <form
+      action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+      method="POST"
+    >
+       <div className="field">
+        <input
+          type="hidden"
+          id="amount"
+          name="amount"
+          autoComplete="off"
+          value={TheFormData.amount}
+          onChange={({ target }) =>
+            setTheFormData({
+              ...TheFormData,
+              amount: target.value,
+              total_amount: target.value,
+            })
+          }
+          required
+        />
+      </div>
+      <input
+        type="hidden"
+        id="tax_amount"
+        name="tax_amount"
+        value={TheFormData.tax_amount}
+        required
+      />
+      <input
+        type="hidden"
+        id="total_amount"
+        name="total_amount"
+        value={TheFormData.total_amount}
+        required
+      />
+      <input
+        type="hidden"
+        id="transaction_uuid"
+        name="transaction_uuid"
+        value={TheFormData.transaction_uuid}
+        required
+      />
+      <input
+        type="hidden"
+        id="product_code"
+        name="product_code"
+        value={TheFormData.product_code}
+        required
+      />
+      <input
+        type="hidden"
+        id="product_service_charge"
+        name="product_service_charge"
+        value={TheFormData.product_service_charge}
+        required
+      />
+      <input
+        type="hidden"
+        id="product_delivery_charge"
+        name="product_delivery_charge"
+        value={TheFormData.product_delivery_charge}
+        required
+      />
+      <input
+        type="hidden"
+        id="success_url"
+        name="success_url"
+        value={TheFormData.success_url}
+        required
+      />
+      <input
+        type="hidden"
+        id="failure_url"
+        name="failure_url"
+        value={TheFormData.failure_url}
+        required
+      />
+      <input
+        type="hidden"
+        id="signed_field_names"
+        name="signed_field_names"
+        value={TheFormData.signed_field_names}
+        required
+      />
+      <input
+        type="hidden"
+        id="signature"
+        name="signature"
+        value={TheFormData.signature}
+        required
+      />  
+
+      
+      
+    
+
+
+    {/* ================================================================================ */}
+    <div className='main-container'>
+    <div className='left-section'>
+        <h3>Select Payment method</h3>
+        <button className='bth' value="Pay via E-Sewa" type="submit" >Pay via Esewa</button>
+        <button>Cash on Delivery</button>
+    </div>
+    
+    <div className='right-section'>
+        <h2>ORDER SUMMARY</h2>
+        <hr/>
+        <div className='ubox'>
+        <span>Order amount: Rs. {totalAmount} <br/></span>
+        <span>Delivery charge : Rs. 120 <br/></span>
+        </div>
+        <hr/>
+        <div className='lbox'>
+        <span>Total amount : Rs. {pricewithdelivery}</span>
+        </div>
+    </div>
+    </div>
+    </form> 
+    </>
+  )
+}
+
+export default Payment;
+
+import React, { useState, useEffect, useContext } from 'react';
+// import './Store.css'; // Removed if all styles are moved to Tailwind
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { CartContext } from './Components/CartContext';
+import FilterSidebar from './FilterSidebar'; // IMPORT THE NEW COMPONENT
+
+const getCsrfToken = () => {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken' + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+};
+
+const Store = () => {
+  const { fetchCart } = useContext(CartContext);
+
+  // --- Product & Fetch State ---
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(''); // Text in search box
+  const [query, setQuery] = useState(''); // Query used for API call (updated on form submit)
+
+  // --- Filter State (Renamed/Consolidated) ---
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSkinTypes, setSelectedSkinTypes] = useState([]);
+  const [selectedbrand, setSelectedbrand] = useState([]);
+  const [selectedWarranties, setSelectedWarranties] = useState([]);
+  
+  // --- Skin Analysis State (Renamed for clarity) ---
+  const [image, setImage] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null); 
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false); // was loadingg
+  const [analysisError, setAnalysisError] = useState(null); // was errror
+
+  // --- Handlers for Filter Checkboxes (Consolidated) ---
+  const createToggleHandler = (setState) => (value) => {
+    setState(prev => 
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleCategoryChange = createToggleHandler(setSelectedCategories);
+  const handleBrandChange = createToggleHandler(setSelectedbrand);
+  const handleSkinTypeChange = createToggleHandler(setSelectedSkinTypes);
+  const handleWarrantyChange = createToggleHandler(setSelectedWarranties);
+
+  // --- API Functions ---
+
+  const AddToCart = async (productId) => {
+    const token = localStorage.getItem('access_token');
+    try {
+      await axios.post(
+        'http://127.0.0.1:8000/store/add-to-cart/',
+        { product_id: productId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchCart();
+    } catch (err) {
+      console.error('Add to cart error:', err);
+    }
+  };
+
+  const handleSubmitAnalysis = async () => {
+    if (!image) return alert("Please upload an image!");
+
+    setLoadingAnalysis(true);
+    setAnalysisError(null);
+    setAnalysisResult(null); 
+
+    const accessToken = localStorage.getItem("access_token");
+    const csrfToken = getCsrfToken(); 
+
+    if (!accessToken || !csrfToken) {
+      setLoadingAnalysis(false);
+      return console.error("Authentication/CSRF token missing.");
+    }
+
+    const formData = new FormData();
+    formData.append("image", image);
+    axios.defaults.withCredentials = true;
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/store/skin-analysis/",
+        formData,
+        {
+          headers: { 
+            'Authorization': `Bearer ${accessToken}`,
+            'X-CSRFToken': csrfToken, 
+            'Content-Type': 'multipart/form-data', 
+          },
+        }
+      );
+      setAnalysisResult(res.data); 
+    } catch (err) {
+      if (err.response) {
+        setAnalysisError(`Error ${err.response.status}: ${err.response.data.detail || JSON.stringify(err.response.data)}`);
+      } else {
+        setAnalysisError(`Request Setup Error: ${err.message}`);
+      }
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
+
+  // Handle Search Submission
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setQuery(searchTerm); // Trigger useEffect for new API fetch
+    setPage(1); // Reset to the first page on new search
+  };
+
+  // --- useEffect to Fetch Products ---
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const offset = (page - 1) * 9;
+        const response = await axios.get('http://127.0.0.1:8000/store/products/', {
+          params: { offset, limit: 9, search: query }
+        });
+        setProducts(response.data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [page, query]);
+
+  // --- Client-Side Filtering ---
+  const filteredProducts = products.filter(product => {
+    // Only check product properties against selected filters. 
+    // Search is handled by the API via the 'query' state.
+    const matches = [
+      selectedCategories.length === 0 || selectedCategories.includes(product.category),
+      selectedSkinTypes.length === 0 || (product.for_type && selectedSkinTypes.includes(product.for_type)),
+      selectedWarranties.length === 0 || (product.warranty && selectedWarranties.includes(product.warranty)),
+      selectedbrand.length === 0 || (product.brand && selectedbrand.includes(product.brand)),
+    ];
+    return matches.every(Boolean);
+  });
+  
+  if (loading) return <p className="text-center p-8">Loading products...</p>;
+  if (error) return <p className="text-center p-8 text-red-600">{error}</p>;
+
+  return (
+    <>
+      <div className='main-containerm flex flex-col md:flex-row min-h-screen'>
+        
+        {/* LEFT SIDEBAR (NEW COMPONENT) */}
+        <FilterSidebar
+          selectedCategories={selectedCategories}
+          selectedSkinTypes={selectedSkinTypes}
+          selectedbrand={selectedbrand}
+          selectedWarranties={selectedWarranties}
+          handleCategoryChange={handleCategoryChange}
+          handleSkinTypeChange={handleSkinTypeChange}
+          handleBrandChange={handleBrandChange}
+          handleWarrantyChange={handleWarrantyChange}
+          image={image}
+          setImage={setImage}
+          handleSubmitAnalysis={handleSubmitAnalysis}
+          loadingAnalysis={loadingAnalysis}
+          analysisError={analysisError}
+          analysisResult={analysisResult}
+        />
+
+        {/* RIGHT CONTENTS (PRODUCTS) */}
+        <div className='right-contents flex-1 p-4 md:ml-4'>
+          
+          {/* Search Bar */}
+          <div className='search-holder mb-6'>
+            <form className="flex max-w-lg mx-auto" onSubmit={handleSearchSubmit}>
+              <input 
+                type="text" 
+                placeholder="Search products..." 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} // Keep case for display/typing
+                className="flex-1 p-3 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button 
+                type="submit" 
+                className="px-5 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition"
+              >
+                <i className="fa fa-search"></i>
+              </button>
+            </form>
+          </div>
+
+          {/* Product Cards Grid */}
+          <div className='cards-containerm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+            {filteredProducts.map(product => (
+              <div key={product.id} className="bg-white shadow-xl rounded-xl overflow-hidden transition transform hover:scale-[1.02]">
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={`http://127.0.0.1:8000${product.image}`} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <span className="font-semibold text-lg block truncate">{product.name}</span>
+                  <p className="text-xl font-bold text-green-600 mt-1">${product.price}</p>
+                  <div className="flex justify-between items-center mt-3">
+                    <button 
+                      className='px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition' 
+                      onClick={() => AddToCart(product.id)}
+                    >
+                      Add to Cart
+                    </button>
+                    <Link to={`/products/${product.id}`} className='text-sm text-blue-500 hover:underline'>
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredProducts.length === 0 && (
+                <p className="col-span-full text-center text-gray-500 mt-10">No products match your current filters.</p>
+            )}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center space-x-4 mt-8">
+            <button 
+              onClick={() => setPage(page - 1)} 
+              disabled={page === 1 || loading}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
+            >
+              Prev
+            </button>
+            <button 
+              onClick={() => setPage(page + 1)} 
+              disabled={loading || products.length < 9}
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default Store;

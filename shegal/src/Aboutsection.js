@@ -74,9 +74,11 @@ const AboutSection = () => {
       transition: { staggerChildren: 0.2 }
     }
   };
-
+  const bgpath = '/static/images/bg.png';
   return (
-    <section className="bg-gray-50 py-16 px-4 md:px-8 lg:px-16 overflow-hidden">
+    <section className="bg-gray-50 py-16 px-4 md:px-8 lg:px-16 overflow-hidden bg-center bg-cover"
+    style={{ backgroundImage: `url(${bgpath})` }}
+    >
       <div className="max-w-7xl mx-auto">
         
         {/* Main Content Grid */}

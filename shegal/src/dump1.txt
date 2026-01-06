@@ -1,448 +1,415 @@
-import React,{useState,useEffect} from 'react'
-import './Payment.css'
-import { CartContext } from './Components/CartContext';
-import { useContext } from 'react';
-import {v4 as uuidv4} from "uuid";
-import CryptoJS from "crypto-js";
-
-const Payment = () => {
-    const { cart, fetchCart } = useContext(CartContext);
-    let pricewithdelivery = 0;
-    let totalAmount = 0;
-     for (let i = 0; i < (cart.items?.length || 0); i++) {
-        const item = cart.items[i];
-        const price = item.price || 0; // use item.price, not item.product.price
-        totalAmount += price * item.quantity;
-        pricewithdelivery = totalAmount + 120;
-  };
-   
-   //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    const [TheFormData, setTheFormData] = useState({
-        amount: pricewithdelivery,
-        tax_amount: "0",
-        total_amount: pricewithdelivery,
-        transaction_uuid: uuidv4(),
-        product_service_charge: "0",
-        product_delivery_charge: "0",
-        product_code: "EPAYTEST",
-        success_url: "http://localhost:5173/paymentsuccess",
-        failure_url: "http://localhost:5173/paymentfailure",
-        signed_field_names: "total_amount,transaction_uuid,product_code",
-        signature: "",
-        secret: "8gBm/:&EnhH.1/q",
-      });
+// // Home.js
+// import React, { useEffect, useState } from 'react';
+// import axios from 'axios';
+// import { useNavigate } from 'react-router-dom';
+// import './Home.css';
+// import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+// import AboutSection from './Aboutsection';
+// import BlogSection from './Blogsection';
+// import './Store.css'
+// import ShopSection from './ShopSection';
+// const Home = () => {  
+//     const [products, setProducts] = useState([]);
+//       const [loading, setLoading] = useState(true);
+//       const [error, setError] = useState(null);
     
-      // generate signature function
-      const generateSignature = (
-        total_amount,
-        transaction_uuid,
-        product_code,
-        secret
-      ) => {
-        const hashString = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
-        const hash = CryptoJS.HmacSHA256(hashString, secret);
-        const hashedSignature = CryptoJS.enc.Base64.stringify(hash);
-        return hashedSignature;
-      };
+//       useEffect(() => {
+//         const fetchProducts = async () => {
+//           try {
+//             const response = await axios.get('http://127.0.0.1:8000/store/products/');
+//             setProducts(response.data);
+//           } catch (err) {
+//             setError('Failed to fetch products');
+//           } finally {
+//             setLoading(false);
+//           }
+//         };
     
-      // useeffect
-      useEffect(() => {
-        const { total_amount, transaction_uuid, product_code, secret } = TheFormData;
-        const hashedSignature = generateSignature(
-          total_amount,
-          transaction_uuid,
-          product_code,
-          secret
-        );
+//         fetchProducts();
+//       }, []);
     
-        setTheFormData({ ...TheFormData, signature: hashedSignature });
-      }, [TheFormData.amount]);
-  
-  
-  return (
-    <>
-    <form
-      action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
-      method="POST"
-    >
-       <div className="field">
-        <input
-          type="hidden"
-          id="amount"
-          name="amount"
-          autoComplete="off"
-          value={TheFormData.amount}
-          onChange={({ target }) =>
-            setTheFormData({
-              ...TheFormData,
-              amount: target.value,
-              total_amount: target.value,
-            })
-          }
-          required
-        />
-      </div>
-      <input
-        type="hidden"
-        id="tax_amount"
-        name="tax_amount"
-        value={TheFormData.tax_amount}
-        required
-      />
-      <input
-        type="hidden"
-        id="total_amount"
-        name="total_amount"
-        value={TheFormData.total_amount}
-        required
-      />
-      <input
-        type="hidden"
-        id="transaction_uuid"
-        name="transaction_uuid"
-        value={TheFormData.transaction_uuid}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_code"
-        name="product_code"
-        value={TheFormData.product_code}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_service_charge"
-        name="product_service_charge"
-        value={TheFormData.product_service_charge}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_delivery_charge"
-        name="product_delivery_charge"
-        value={TheFormData.product_delivery_charge}
-        required
-      />
-      <input
-        type="hidden"
-        id="success_url"
-        name="success_url"
-        value={TheFormData.success_url}
-        required
-      />
-      <input
-        type="hidden"
-        id="failure_url"
-        name="failure_url"
-        value={TheFormData.failure_url}
-        required
-      />
-      <input
-        type="hidden"
-        id="signed_field_names"
-        name="signed_field_names"
-        value={TheFormData.signed_field_names}
-        required
-      />
-      <input
-        type="hidden"
-        id="signature"
-        name="signature"
-        value={TheFormData.signature}
-        required
-      />  
+//       if (loading) return <p>Loading products...</p>;
+//       if (error) return <p>{error}</p>;
+//   return (<>
+//     <section className="hero">
+//       <div className="overlay">
+//         <div className="hero-text">
+//           <h1>EFFORTLESS<br />ELEGANCE</h1>
+//           <button className="hero-btn">Read More</button>
+//         </div>
 
-      
-      
+//         <div className="hero-nav">
+//           <button className="nav-btn"><FaArrowLeft /></button>
+//           <button className="nav-btn"><FaArrowRight /></button>
+//         </div>
+//       </div>
+//     </section>
+//     <section id='about' className='about'>
+//       <AboutSection/>
+//     </section>
+//     <hr/>
     
+//     <ShopSection/>
+//     <section id='blog' className='blogs'>
+//       <BlogSection/>
+//     </section>
+//     </>
+//   );
+// };
 
-
-    {/* ================================================================================ */}
-    <div className='main-container'>
-    <div className='left-section'>
-        <h3>Select Payment method</h3>
-        <button className='bth' value="Pay via E-Sewa" type="submit" >Pay via Esewa</button>
-        <button>Cash on Delivery</button>
-    </div>
-    
-    <div className='right-section'>
-        <h2>ORDER SUMMARY</h2>
-        <hr/>
-        <div className='ubox'>
-        <span>Order amount: Rs. {totalAmount} <br/></span>
-        <span>Delivery charge : Rs. 120 <br/></span>
-        </div>
-        <hr/>
-        <div className='lbox'>
-        <span>Total amount : Rs. {pricewithdelivery}</span>
-        </div>
-    </div>
-    </div>
-    </form> 
-    </>
-  )
-}
-
-export default Payment;
-
-import React, { useState, useEffect, useContext } from 'react';
-// import './Store.css'; // Removed if all styles are moved to Tailwind
+// export default Home;
+import React, { useEffect, useState,useRef,useLayoutEffect } from 'react';
+import './Home.css';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { CartContext } from './Components/CartContext';
-import FilterSidebar from './FilterSidebar'; // IMPORT THE NEW COMPONENT
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-const getCsrfToken = () => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken' + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
+// Component Imports
+import AboutSection from './Aboutsection';
+import BlogSection from './Blogsection';
+import ShopSection from './ShopSection';
+import Footer from './Components/Footer'; // Assuming you have a Footer component
 
-const Store = () => {
-  const { fetchCart } = useContext(CartContext);
+gsap.registerPlugin(ScrollTrigger)
+const heroImages = [
+  './static/images/skincare.jpg', // Replace with your actual image paths
+  './static/images/theeye.jpg',
+  './static/images/facecream.jpg',
+];
 
-  // --- Product & Fetch State ---
+const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState(''); // Text in search box
-  const [query, setQuery] = useState(''); // Query used for API call (updated on form submit)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // --- Filter State (Renamed/Consolidated) ---
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedSkinTypes, setSelectedSkinTypes] = useState([]);
-  const [selectedbrand, setSelectedbrand] = useState([]);
-  const [selectedWarranties, setSelectedWarranties] = useState([]);
+
+  const heroRef = useRef(null)
+  const heroImgRef = useRef(null)
+  const productsRef = useRef(null)
+  const m6Ref = useRef(null)
+  const serumRef = useRef(null)
   
-  // --- Skin Analysis State (Renamed for clarity) ---
-  const [image, setImage] = useState(null);
-  const [analysisResult, setAnalysisResult] = useState(null); 
-  const [loadingAnalysis, setLoadingAnalysis] = useState(false); // was loadingg
-  const [analysisError, setAnalysisError] = useState(null); // was errror
-
-  // --- Handlers for Filter Checkboxes (Consolidated) ---
-  const createToggleHandler = (setState) => (value) => {
-    setState(prev => 
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleCategoryChange = createToggleHandler(setSelectedCategories);
-  const handleBrandChange = createToggleHandler(setSelectedbrand);
-  const handleSkinTypeChange = createToggleHandler(setSelectedSkinTypes);
-  const handleWarrantyChange = createToggleHandler(setSelectedWarranties);
-
-  // --- API Functions ---
-
-  const AddToCart = async (productId) => {
-    const token = localStorage.getItem('access_token');
-    try {
-      await axios.post(
-        'http://127.0.0.1:8000/store/add-to-cart/',
-        { product_id: productId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchCart();
-    } catch (err) {
-      console.error('Add to cart error:', err);
-    }
-  };
-
-  const handleSubmitAnalysis = async () => {
-    if (!image) return alert("Please upload an image!");
-
-    setLoadingAnalysis(true);
-    setAnalysisError(null);
-    setAnalysisResult(null); 
-
-    const accessToken = localStorage.getItem("access_token");
-    const csrfToken = getCsrfToken(); 
-
-    if (!accessToken || !csrfToken) {
-      setLoadingAnalysis(false);
-      return console.error("Authentication/CSRF token missing.");
-    }
-
-    const formData = new FormData();
-    formData.append("image", image);
-    axios.defaults.withCredentials = true;
-
-    try {
-      const res = await axios.post(
-        "http://localhost:8000/store/skin-analysis/",
-        formData,
-        {
-          headers: { 
-            'Authorization': `Bearer ${accessToken}`,
-            'X-CSRFToken': csrfToken, 
-            'Content-Type': 'multipart/form-data', 
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      setTimeout(() => {
+        gsap.to(heroImgRef.current, {
+          scrollTrigger: {
+            trigger: productsRef.current,
+            start: 'top center',
+            end: 'top 100px',
+            scrub: true,
           },
-        }
-      );
-      setAnalysisResult(res.data); 
-    } catch (err) {
-      if (err.response) {
-        setAnalysisError(`Error ${err.response.status}: ${err.response.data.detail || JSON.stringify(err.response.data)}`);
-      } else {
-        setAnalysisError(`Request Setup Error: ${err.message}`);
-      }
-    } finally {
-      setLoadingAnalysis(false);
-    }
-  };
-
-  // Handle Search Submission
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setQuery(searchTerm); // Trigger useEffect for new API fetch
-    setPage(1); // Reset to the first page on new search
-  };
-
-  // --- useEffect to Fetch Products ---
+          x: -10,
+          y: 660,
+          scale: 0.4,
+          rotate: 0,
+          ease: 'power2.out',
+        })
+      }, 1300)
+  
+      gsap.to(m6Ref.current, {
+        scrollTrigger: {
+          trigger: serumRef.current, 
+          start: 'top bottom',      
+          end: 'top center',        
+          scrub: true,
+        },
+        x: 450,   
+        y: 500,  
+        scale: 1.5,
+        rotate:10,
+        ease: 'power2.out',
+      })
+    }, heroRef)
+  
+    return () => ctx.revert()
+  }, [])
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
       try {
-        const offset = (page - 1) * 9;
-        const response = await axios.get('http://127.0.0.1:8000/store/products/', {
-          params: { offset, limit: 9, search: query }
-        });
+        const response = await axios.get('http://127.0.0.1:8000/store/products/');
         setProducts(response.data);
-        setError(null);
       } catch (err) {
-        setError('Failed to fetch products');
+        console.error("Fetch Error:", err);
+        setError('Unable to load our latest collection. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
     fetchProducts();
-  }, [page, query]);
+  }, []);
 
-  // --- Client-Side Filtering ---
-  const filteredProducts = products.filter(product => {
-    // Only check product properties against selected filters. 
-    // Search is handled by the API via the 'query' state.
-    const matches = [
-      selectedCategories.length === 0 || selectedCategories.includes(product.category),
-      selectedSkinTypes.length === 0 || (product.for_type && selectedSkinTypes.includes(product.for_type)),
-      selectedWarranties.length === 0 || (product.warranty && selectedWarranties.includes(product.warranty)),
-      selectedbrand.length === 0 || (product.brand && selectedbrand.includes(product.brand)),
-    ];
-    return matches.every(Boolean);
-  });
-  
-  if (loading) return <p className="text-center p-8">Loading products...</p>;
-  if (error) return <p className="text-center p-8 text-red-600">{error}</p>;
+  // Hero image auto-carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % heroImages.length
+      );
+    }, 7000); // Change image every 7 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      (prevIndex - 1 + heroImages.length) % heroImages.length
+    );
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      (prevIndex + 1) % heroImages.length
+    );
+  };
 
   return (
-    <>
-      <div className='main-containerm flex flex-col md:flex-row min-h-screen'>
-        
-        {/* LEFT SIDEBAR (NEW COMPONENT) */}
-        <FilterSidebar
-          selectedCategories={selectedCategories}
-          selectedSkinTypes={selectedSkinTypes}
-          selectedbrand={selectedbrand}
-          selectedWarranties={selectedWarranties}
-          handleCategoryChange={handleCategoryChange}
-          handleSkinTypeChange={handleSkinTypeChange}
-          handleBrandChange={handleBrandChange}
-          handleWarrantyChange={handleWarrantyChange}
-          image={image}
-          setImage={setImage}
-          handleSubmitAnalysis={handleSubmitAnalysis}
-          loadingAnalysis={loadingAnalysis}
-          analysisError={analysisError}
-          analysisResult={analysisResult}
-        />
+    <main className="bg-white">
+      {/* Hero Section */}
+      <section>
+         <div className="hero" ref={heroRef}>
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
+        </motion.div>
 
-        {/* RIGHT CONTENTS (PRODUCTS) */}
-        <div className='right-contents flex-1 p-4 md:ml-4'>
-          
-          {/* Search Bar */}
-          <div className='search-holder mb-6'>
-            <form className="flex max-w-lg mx-auto" onSubmit={handleSearchSubmit}>
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} // Keep case for display/typing
-                className="flex-1 p-3 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500"
-              />
-              <button 
-                type="submit" 
-                className="px-5 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition"
-              >
-                <i className="fa fa-search"></i>
-              </button>
-            </form>
+        <div className="hero-content">
+          <motion.h1
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+          >
+            Minimalist
+          </motion.h1>
+
+          <motion.p
+            initial={{ y: 300, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.8 }}
+          >
+            <span className="span1">Clean skincare made simple</span>{' '}
+            <span className="span2">
+              effective, honest, and gentle on your skin.
+            </span>
+          </motion.p>
+
+          <motion.img
+            ref={heroImgRef}
+            src="./static/images/hero.png"
+            alt="hero"
+            className="hero-img"
+            initial={{ y: 300, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.5 }}
+            style={{ rotate: 20 }}
+          />
+        </div>
+
+        <motion.div
+          className="hero-left"
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: 1 }}
+        >
+          <p>
+            Discover the power of simplicity in skincare. Formulas designed to
+            nourish, balance, and let your natural glow shine. Because true
+            beauty begins with healthy, cared-for skin.
+          </p>
+          <button className="hero-btn">Shop Now</button>
+        </motion.div>
+
+        <motion.div
+          className="hero-right"
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: 1.2 }}
+        >
+          <div className="hero-card">
+            <h1>Glow Naturally</h1>
+            <p>
+              Experience minimal skincare crafted to bring balance, hydration,
+              and confidence to your everyday routine.
+            </p>
+            <button className="hero-card-btn">Learn More</button>
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="products" ref={productsRef}>
+        <h2>Our Products</h2>
+        <div className="product-grid">
+          <div className="product-item">
+            <div className="product-img">
+              <img src="./static/images/m2.png" alt="product 1" />
+            </div>
+            <p>Daily Sunscreen</p>
+          </div>
+          <div className="product-item">
+            <div className="product-img">
+            </div>
+            <p>Hair Serum</p>
+          </div>
+          <div className="product-item">
+            <div className="product-img">
+              <img src="./static/images/m3.png" alt="product 3" />
+            </div>
+            <p>Face Expholiator</p>
           </div>
 
-          {/* Product Cards Grid */}
-          <div className='cards-containerm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-            {filteredProducts.map(product => (
-              <div key={product.id} className="bg-white shadow-xl rounded-xl overflow-hidden transition transform hover:scale-[1.02]">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={`http://127.0.0.1:8000${product.image}`} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <span className="font-semibold text-lg block truncate">{product.name}</span>
-                  <p className="text-xl font-bold text-green-600 mt-1">${product.price}</p>
-                  <div className="flex justify-between items-center mt-3">
-                    <button 
-                      className='px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition' 
-                      onClick={() => AddToCart(product.id)}
-                    >
-                      Add to Cart
-                    </button>
-                    <Link to={`/products/${product.id}`} className='text-sm text-blue-500 hover:underline'>
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {filteredProducts.length === 0 && (
-                <p className="col-span-full text-center text-gray-500 mt-10">No products match your current filters.</p>
-            )}
+          <div className="product-item">
+            <div className="product-img">
+              <img src="./static/images/m4.png" alt="product 4" />
+            </div>
+            <p>Alpha Cleanser</p>
           </div>
-
-          {/* Pagination */}
-          <div className="flex justify-center space-x-4 mt-8">
-            <button 
-              onClick={() => setPage(page - 1)} 
-              disabled={page === 1 || loading}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
-            >
-              Prev
-            </button>
-            <button 
-              onClick={() => setPage(page + 1)} 
-              disabled={loading || products.length < 9}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
-            >
-              Next
-            </button>
+          <div className="product-item">
+            <div className="product-img">
+            <img ref={m6Ref} src="./static/images/m6.png" alt="product 5" />
+            </div>
+            <p>Hair Repair Serum</p>
+          </div>
+          <div className="product-item">
+            <div className="product-img">
+              <img src="./static/images/m5.png" alt="product 6" />
+            </div>
+            <p>Radiance Oil</p>
           </div>
         </div>
       </div>
-    </>
-  );
-}
+   <div className="s">
+   <div className="serum" ref={serumRef}>
 
-export default Store;
+  <div className="serum-text">
+    <img src="./static/images/drop.png" alt="" className='drop' />
+    <h1>Hydrating Serum</h1>
+    <p>
+      Our Hydrating Serum is formulated to deeply nourish and restore your skin’s natural balance. 
+      Enriched with essential vitamins and antioxidants, it helps retain moisture, improves elasticity, 
+      and gives your skin a dewy, radiant glow. Perfect for daily use and suitable for all skin types — 
+      because healthy skin never goes out of style.
+    </p>
+    <button className="serum-btn">Shop Now</button>
+  </div>
+
+  <div className="serum-img">
+    <img src="/images/serum.png" alt="Hydrating Serum" />
+  </div>
+</div>
+
+   </div>
+      </section>
+      <section className="relative h-screen w-full overflow-hidden">
+        <AnimatePresence>
+          <motion.div
+            key={currentImageIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImages[currentImageIndex]})` }}
+          >
+            <div className="absolute inset-0 bg-black/50" /> {/* Darker overlay */}
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+            className="text-white space-y-6 max-w-2xl"
+          >
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-extralight tracking-tighter leading-tight drop-shadow-lg">
+              EFFORTLESS<br />
+              <motion.span
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1, delay: 1, ease: "easeOut" }}
+                className="font-bold text-rose-300 italic block mt-2 md:mt-4"
+              >
+                ELEGANCE
+              </motion.span>
+            </h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.5, ease: "easeOut" }}
+              className="text-gray-100 max-w-md text-lg md:text-xl font-light tracking-wide leading-relaxed drop-shadow-md"
+            >
+              Discover the secret to timeless beauty with our curated premium skincare and luxury cosmetics.
+            </motion.p>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 2, ease: "easeOut" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-8 px-12 py-4 bg-white text-gray-900 font-bold rounded-full hover:bg-rose-500 hover:text-white transition-all duration-300 shadow-xl"
+            >
+              Shop the Collection
+            </motion.button>
+          </motion.div>
+
+          {/* Hero Navigation Buttons */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-10">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handlePrevImage}
+              className="p-4 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white hover:text-gray-900 transition-all duration-300 shadow-lg"
+            >
+              <FaArrowLeft />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleNextImage}
+              className="p-4 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white hover:text-gray-900 transition-all duration-300 shadow-lg"
+            >
+              <FaArrowRight />
+            </motion.button>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-16 md:py-24">
+        <AboutSection />
+      </section>
+
+      <hr className="border-gray-100" />
+
+      {/* Shop Section with Props Handling */}
+      <section id="shop" className="py-16 md:py-24">
+        {loading ? (
+          <div className="py-20 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-rose-500 mx-auto mb-4"></div>
+            <p className="text-gray-500 animate-pulse text-lg">Fetching our latest products...</p>
+          </div>
+        ) : error ? (
+          <div className="py-20 text-center text-rose-500 text-lg font-medium">
+            <p>{error}</p>
+          </div>
+        ) : (
+          <ShopSection products={products} />
+        )}
+      </section>
+
+      {/* Blog Section */}
+      <section id="blog" className="py-16 md:py-24">
+        <BlogSection />
+      </section>
+
+      {/* Footer (if you have one) */}
+      <Footer />
+    </main>
+  );
+};
+
+export default Home;

@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from .models import Product
+from .models import ConfirmedOrderItem, Product
 from .serializers import ProductSerializer,OrderSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -20,11 +20,49 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import transaction
+from .models import Order, ConfirmedOrder, Customer
+from .serializers import ConfirmedOrderSerializer
+import datetime
 
+class ConfirmOrderView(APIView):
+    def post(self, request):
+        customer = request.user.customer
+        
+        # Use an atomic transaction to ensure data integrity
+        with transaction.atomic():
+            # 1. Fetch the active cart
+            order = Order.objects.filter(customer=customer, complete=False).first()
+            
+            if not order or order.orderitem_set.count() == 0:
+                return Response({"error": "No active cart found"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 2. Update the Order status (Clears it from the cart view)
+            confirmed_order = ConfirmedOrder.objects.create(
+                customer=customer,
+                total_amount=order.get_cart_total,
+                payment_method="COD"
+            )
+
+            # 3. Copy/Move to ConfirmedOrder table
+            order_items = order.orderitem_set.all()
+            for item in order_items:
+                ConfirmedOrderItem.objects.create(
+                    confirmed_order=confirmed_order,
+                    product_name=item.product.name,
+                    price_at_purchase=item.product.price,
+                    quantity=item.quantity
+                )
+            order_items.delete()
+            order.delete()
+            
+            serializer = ConfirmedOrderSerializer(confirmed_order)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 @ensure_csrf_cookie
 def set_csrf_cookie(request):
     # Django automatically sets the 'csrftoken' cookie in the response headers.
@@ -138,6 +176,8 @@ def skin_analysis(request):
             "texture": float(texture_roughness)
         }
     })
+
+
 
 @csrf_exempt
 @api_view(['POST'])

@@ -306,6 +306,8 @@ const ShippingPage = () => {
     street: "",
   });
 
+
+  
   const [paymentData, setPaymentData] = useState({
     amount: "0",
     tax_amount: "0",
@@ -377,11 +379,11 @@ const ShippingPage = () => {
 
       // 2. Mark order as COD in your backend
       // Assuming you have an endpoint for this, or just navigate to success
-      await axios.post("http://127.0.0.1:8000/store/place-order-cod/", {}, { 
+      await axios.post("http://127.0.0.1:8000/store/api/confirm-order/", {}, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
 
-      navigate('/paymentsuccess', { state: { method: 'COD' } });
+      navigate('/', { state: { method: 'COD' } });
     } catch (error) {
       console.error("COD Error:", error);
       alert("Failed to process COD order.");
@@ -389,6 +391,8 @@ const ShippingPage = () => {
       setIsCodLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 pt-28 pb-12 px-4">

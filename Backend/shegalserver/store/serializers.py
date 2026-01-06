@@ -2,6 +2,22 @@
 from rest_framework import serializers
 from .models import Product, Order,OrderItem,ShippingAddress
 
+from .models import ConfirmedOrder
+from .models import ConfirmedOrderItem
+
+class ConfirmedOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfirmedOrderItem
+        fields = ['product_name', 'price_at_purchase', 'quantity', 'get_total']
+
+class ConfirmedOrderSerializer(serializers.ModelSerializer):
+    # We use 'items' because we set related_name='items' in the model
+    items = ConfirmedOrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ConfirmedOrder
+        fields = '__all__'
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

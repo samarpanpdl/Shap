@@ -3,7 +3,7 @@ from django.urls import path
 from .views import paginated_products
 from .views import product_detail
 from .views import ProductListView
-from .views import add_to_cart,remove_from_cart,cart_summary,cart_detail,add_shipping_address,skin_analysis,search_products
+from .views import add_to_cart,remove_from_cart,cart_summary,cart_detail,add_shipping_address,skin_analysis,search_products, ConfirmOrderView
 urlpatterns = [
     path('products/', paginated_products, name='first_nine_products'),
     path('products/<int:id>/',product_detail, name='product-detail'),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('cart/',cart_detail, name='cart'),
     path('ship/',add_shipping_address, name='ship'),  
     path('skin-analysis/',skin_analysis,name="skincare"),  
-    path('search/',search_products,name="search products")
+    path('search/',search_products,name="search products"),
+    path('api/confirm-order/', ConfirmOrderView.as_view(), name='confirm-order'),
 
 ]

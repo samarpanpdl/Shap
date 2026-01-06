@@ -61,7 +61,8 @@ class Customer(models.Model):
 
 	def __str__(self):
 		return self.name
-	
+
+
 class Order(models.Model):
 	customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
 	date_ordered = models.DateTimeField(auto_now_add=True)
@@ -85,7 +86,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
 	product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-	order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+	order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
 	quantity = models.IntegerField(default=0, null=True, blank=True)
 	date_added = models.DateTimeField(auto_now_add=True)
 
@@ -93,6 +94,8 @@ class OrderItem(models.Model):
 	def get_total(self):
 		total = self.product.price * self.quantity
 		return total
+
+	
 
 class ShippingAddress(models.Model):
 	customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
@@ -106,3 +109,25 @@ class ShippingAddress(models.Model):
 
 	def __str__(self):
 		return self.address
+
+class ConfirmedOrder(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order_number = models.CharField(max_length=100, unique=True, null=True)
+    total_amount = models.FloatField()
+    payment_method = models.CharField(max_length=20, default="COD")
+    status = models.CharField(max_length=20, default="Pending")
+    date_confirmed = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Confirmed Order {self.id} - {self.customer.name}"
+
+class ConfirmedOrderItem(models.Model):
+    confirmed_order = models.ForeignKey(ConfirmedOrder, on_delete=models.CASCADE, related_name='items')
+    product_name = models.CharField(max_length=200) # Store name as string in case product is deleted
+    price_at_purchase = models.FloatField() # Lock the price!
+    quantity = models.IntegerField()
+
+    @property
+    def get_total(self):
+        return self.price_at_purchase * self.quantity
+	

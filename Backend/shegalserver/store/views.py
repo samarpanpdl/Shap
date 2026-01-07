@@ -7,7 +7,7 @@ from rest_framework import status
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from .models import Product, Order, OrderItem, Customer,ShippingAddress
+from .models import Product, Order, OrderItem, Customer,ShippingAddress,ConfirmedOrder, ConfirmedOrderItem
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 from .serializers import OrderItemSerializer
@@ -324,6 +324,15 @@ def cart_summary(request):
         "cart_total": order.get_cart_total
     })
 
+class order_summary(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        customer = request.user.customer
+        # Fetch all confirmed orders for this customer, newest first
+        orders = ConfirmedOrder.objects.filter(customer=customer).order_by('-date_confirmed')
+        serializer = ConfirmedOrderSerializer(orders, many=True)
+        return Response(serializer.data)
 
 
 @api_view(['GET'])

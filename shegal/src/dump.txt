@@ -72,3 +72,82 @@
           </div>
         </div>
       </section>
+
+
+
+
+import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
+
+export const CartContext = createContext();
+
+export const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState({ items: [], cart_items: 0, cart_total: 0 });
+  // 'orders' is now an array of confirmed order objects
+  const [orders, setOrders] = useState([]); 
+
+  const fetchCart = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    try {
+      const res = await axios.get('http://127.0.0.1:8000/store/cart-summary/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCart(res.data);
+    } catch (error) {
+      console.error('Failed to fetch cart', error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    try {
+      // Pointing to the new History view we created
+      const res = await axios.get('http://127.0.0.1:8000/store/api/order-history/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrders(res.data);
+    } catch (error) {
+      console.error('Failed to fetch order history', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+    fetchOrders();
+  }, []);
+  
+  const clearCart = () => setCart({ items: [], cart_items: 0, cart_total: 0 });
+  const clearOrders = () => setOrders([]);
+
+  return (
+    <CartContext.Provider value={{ 
+      cart, setCart, fetchCart, clearCart,
+      orders, setOrders, fetchOrders, clearOrders 
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

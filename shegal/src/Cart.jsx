@@ -133,12 +133,17 @@ import { CartContext } from './Components/CartContext';
 
 const Cart = () => {
   const { cart, fetchCart } = useContext(CartContext);
+  const { orders, fetchOrders } = useContext(CartContext);
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(null);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   // Handle quantity changes with loading feedback
   const updateQuantity = async (productId, action) => {
@@ -183,69 +188,85 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Items List */}
-          <div className="lg:col-span-2 space-y-4">
-            <AnimatePresence mode='popLayout'>
-              {cart.items?.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }}
-                  className="bg-white p-12 rounded-3xl text-center shadow-sm"
-                >
-                  <p className="text-gray-400 text-lg mb-6">Your bag is currently empty.</p>
-                  <Link to="/store" className="bg-rose-600 text-white px-8 py-3 rounded-full font-bold">Browse Products</Link>
-                </motion.div>
-              ) : (
-                cart.items.map((item) => (
-                  <motion.div 
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex gap-4 md:gap-6 items-center"
-                  >
-                    {/* Product Image */}
-                    <div className="w-20 h-20 md:w-28 md:h-28 flex-shrink-0 bg-gray-100 rounded-2xl overflow-hidden">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
+          <div className="grid lg:grid-cols-1 gap-8">
+  {/* --- CONFIRMED ORDERS SECTION --- */}
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-gray-800">Order History</h2>
+    <AnimatePresence mode='popLayout'>
+      {orders?.length === 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-12 rounded-3xl text-center shadow-sm">
+          <p className="text-gray-400 text-lg">You have no confirmed orders.</p>
+        </motion.div>
+      ) : (
+        orders.map((order) => (
+          <motion.div 
+            key={order.order_number} 
+            layout 
+            className="bg-gray-50 p-6 rounded-3xl border border-gray-200 space-y-4"
+          >
+            {/* Order Header */}
+            <div className="flex justify-between items-center border-b pb-4">
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold">Order Number</p>
+                <p className="font-mono text-rose-600">#{order.order_number}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500 uppercase font-bold">Total Paid</p>
+                <p className="font-bold text-gray-900">${order.total_amount}</p>
+              </div>
+            </div>
 
-                    {/* Product Info */}
-                    <div className="flex-grow">
-                      <h3 className="font-bold text-gray-900 text-lg">{item.name || "Product"}</h3>
-                      <p className="text-rose-500 font-medium">${item.price}</p>
+            {/* Nested Items Mapping */}
+            <div className="space-y-3">
+              {order.items.map((item, index) => (
+                <div key={index} className="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
+                      IMG
                     </div>
+                    <div>
+                      <p className="font-bold text-gray-800 text-sm">{item.product_name}</p>
+                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                    </div>
+                  </div>
+                  <p className="font-bold text-sm">${item.price_at_purchase}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ))
+      )}
+    </AnimatePresence>
+  </div>
 
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                      <button 
-                        onClick={() => updateQuantity(item.id, 'remove')}
-                        className="p-2 hover:bg-white hover:text-rose-500 rounded-xl transition-all disabled:opacity-30"
-                        disabled={isUpdating === item.id}
-                      >
-                        <FaMinus size={12} />
-                      </button>
-                      <span className="w-4 text-center font-bold text-gray-700">
-                        {isUpdating === item.id ? "..." : item.quantity}
-                      </span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, 'add')}
-                        className="p-2 hover:bg-white hover:text-rose-500 rounded-xl transition-all disabled:opacity-30"
-                        disabled={isUpdating === item.id}
-                      >
-                        <FaPlus size={12} />
-                      </button>
-                    </div>
+  <hr className="border-gray-100" />
 
-                    {/* Subtotal */}
-                    <div className="hidden md:block text-right min-w-[80px]">
-                      <p className="text-sm text-gray-400">Total</p>
-                      <p className="font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </AnimatePresence>
-          </div>
+  {/* --- ACTIVE CART SECTION --- */}
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-gray-800">Shopping Bag</h2>
+    <AnimatePresence mode='popLayout'>
+      {cart.items?.length === 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-12 rounded-3xl text-center shadow-sm">
+          <p className="text-gray-400 text-lg mb-6">Your bag is currently empty.</p>
+          <Link to="/store" className="bg-rose-600 text-white px-8 py-3 rounded-full font-bold">Browse Products</Link>
+        </motion.div>
+      ) : (
+        cart.items.map((item) => (
+          <motion.div key={item.id} layout className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex gap-6 items-center">
+            <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-2xl overflow-hidden">
+              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-bold text-gray-900 text-lg">{item.name}</h3>
+              <p className="text-rose-500 font-medium">${item.price}</p>
+            </div>
+            {/* Quantity Controls ... (rest of your existing code) */}
+          </motion.div>
+        ))
+      )}
+    </AnimatePresence>
+  </div>
+</div>
 
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">

@@ -4,6 +4,7 @@ from .views import paginated_products
 from .views import product_detail
 from .views import ProductListView
 from .views import add_to_cart,remove_from_cart,cart_summary,cart_detail,add_shipping_address,skin_analysis,search_products,order_summary, ConfirmOrderView
+from .views import ForgotPasswordView,ResetPasswordView
 urlpatterns = [
     path('products/', paginated_products, name='first_nine_products'),
     path('products/<int:id>/',product_detail, name='product-detail'),
@@ -17,5 +18,7 @@ urlpatterns = [
     path('skin-analysis/',skin_analysis,name="skincare"),  
     path('search/',search_products,name="search products"),
     path('api/confirm-order/', ConfirmOrderView.as_view(), name='confirm-order'),
+    path("api/forgot-password/", ForgotPasswordView.as_view(),name='forgot-password'),
+    path("api/reset-password/", ResetPasswordView,name='reset-password'),
 
 ]

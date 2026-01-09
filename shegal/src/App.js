@@ -15,18 +15,22 @@ import PaymentSuccess from './PaymentSuccess';
 import Payment from './Payment';
 import axios from 'axios';
 import { useEffect } from 'react';
+import ForgotPassword from './ForgotPassword';
+import ResetPassword from './ResetPassword';
 
 const API_URL = "http://localhost:8000";
 
 function App() {
-  useEffect(() => {
+  // useEffect(() => {
     // Set withCredentials globally to ensure the cookie is received
-    axios.defaults.withCredentials = true; 
+  //   axios.defaults.withCredentials = true; 
 
-    // Initial GET request to force Django to set the cookie
-    axios.get(`${API_URL}/api/set-csrf/`) 
-      .catch(error => console.error("Failed to ensure CSRF cookie:", error));
-  }, []);
+  //   // Initial GET request to force Django to set the cookie
+  //   axios.get(`${API_URL}/api/set-csrf/`) 
+  //     .catch(error => console.error("Failed to ensure CSRF cookie:", error));
+  // }, []);
+  axios.defaults.baseURL = 'http://127.0.0.1:8000';
+  axios.defaults.withCredentials = false;
   return (<>
     <CartProvider>
       
@@ -42,6 +46,8 @@ function App() {
         <Route path='/products/:id/' element={<View/>}/>
         <Route path='/shipping' element={<Shippingpage/>}/>
         <Route path='/payment' element={<Payment/>}/>
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
     <Footer /> 

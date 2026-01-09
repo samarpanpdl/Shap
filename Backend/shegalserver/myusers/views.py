@@ -7,8 +7,17 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
 from rest_framework.permissions import AllowAny
+from email_validator import validate_email, EmailNotValidError
 
-
+def verify_email_domain(email):
+    correct = True
+    try:
+        # check_deliverability=True actually looks up the DNS
+        valid = validate_email(email, check_deliverability=True)
+        return True # Returns normalized email
+    except EmailNotValidError as e:
+        # This will catch 'gmaill.comm' because that domain doesn't exist
+        return False
 @api_view(['POST'])
 def register_user(request):
     username = request.data.get('username')
@@ -21,6 +30,9 @@ def register_user(request):
 
     if not username or not email or not password:
         return Response({'message': 'Username, email, and password are required'}, status=400)
+
+    if not verify_email_domain(email):
+        return Response({'message': 'Invalid email address or domain does not exist'}, status=400)
 
     if User.objects.filter(username=username).exists():
         return Response({'message': 'Username already taken'}, status=400)

@@ -1,5 +1,4 @@
 import React,{useState,useEffect} from 'react'
-import './Payment.css'
 import { CartContext } from './Components/CartContext';
 import { useContext } from 'react';
 import {v4 as uuidv4} from "uuid";

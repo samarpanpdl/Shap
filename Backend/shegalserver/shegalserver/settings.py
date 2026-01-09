@@ -74,30 +74,33 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_EXEMPT_PATHS = [
     '/store/skin-analysis/', 
     '/store/skin-analysis',
+    '/store/api/forgot-password/',
+    '/store/api/reset-password/',
 ]
 
+# settings.py
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.BasicAuthentication', 
-        
-    ),
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny', 
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 9,
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.AllowAny",
-    ),
 }
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#         # Remove BasicAuthentication and SessionAuthentication
-#     ),
-#     'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#     ),
-# }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# This is the "Login" part
+EMAIL_HOST_USER = 'poudelaashutosh27@gmail.com' # Your actual Gmail address
+EMAIL_HOST_PASSWORD = 'nvowcmlfhakblkei' # The 16-digit App Password you generated
 
 
 

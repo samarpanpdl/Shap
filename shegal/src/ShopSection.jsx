@@ -1,38 +1,3 @@
-// import React from 'react'
-
-// const ShopSection = () => {
-//   return (
-//     <section id='shop' className='shop'>
-//         <h2 className="section-titlem">
-//         Our Recent <span className="highlight">Clicks</span>
-//       </h2>
-//        <div className='cards-containerm'>
-//          {products.map(product => (
-//     <div key={product.id} className="cards">
-//       <div className="img-container">
-//         {/* Use product.image or fallback image */}
-        
-//         <img src={`http://127.0.0.1:8000${product.image}`} alt={product.name} />
-//       </div>
-//       <div className="infos">
-//         <span>{product.name}</span>
-//       </div>
-//       <hr />
-//       <div className="extras">
-//         <div className="buttons">
-//           <button>Add to Cart</button>
-//           <button>View</button>
-//           <p>${product.price}</p>
-//         </div>
-//       </div>
-//     </div>
-//   ))}
-//         </div>
-//     </section>
-//   )
-// }
-
-// export default ShopSection
 import React, { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaShoppingCart, FaEye } from 'react-icons/fa';

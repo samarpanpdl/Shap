@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.response import Response
 from .models import ConfirmedOrderItem, Product
 from .serializers import ProductSerializer,OrderSerializer
@@ -27,8 +28,77 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 from .models import Order, ConfirmedOrder, Customer
+from django.contrib.auth.models import User
 from .serializers import ConfirmedOrderSerializer
 import datetime
+from django.utils.decorators import method_decorator # to apply csrf_exempt in forgot password view
+import random
+from django.core.mail import send_mail
+from django.core.cache import cache
+from django.contrib.auth.models import User
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from email_validator import validate_email, EmailNotValidError
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class ForgotPasswordView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny] # This overrides global settings
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not User.objects.filter(email=email).exists():
+            return Response({"detail": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 1. Generate a 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # 2. Store OTP in cache for 10 minutes (keyed by email)
+        cache.set(f"otp_{email}", otp, timeout=600)
+
+        # 3. Send Email
+        try:
+            send_mail(
+                subject='Your Password Reset OTP',
+                message=f'Your OTP is: {otp}',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email], 
+                fail_silently=False,
+            )
+            return Response({"detail": "OTP sent successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": "Failed to send email."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def ResetPasswordView(request):    
+    email = request.data.get('email')
+    otp_received = request.data.get('otp')
+    new_password = request.data.get('new_password')
+
+        # 1. Get OTP from cache
+    otp_in_cache = cache.get(f"otp_{email}")
+
+        # 2. Verify
+    if otp_in_cache and otp_in_cache == otp_received:
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+                
+                # 3. Clear OTP from cache after use
+            cache.delete(f"otp_{email}")
+                
+            return Response({"detail": "Password reset successful."}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+    return Response({"detail": "Invalid or expired OTP."}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class ConfirmOrderView(APIView):
     def post(self, request):

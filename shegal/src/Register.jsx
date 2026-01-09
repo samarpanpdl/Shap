@@ -1,104 +1,4 @@
-// import './Register.css'
-// import React, { useState} from 'react';
-// import axios from 'axios';
-// import { useNavigate } from 'react-router-dom';
 
-// const Register = () => {
-//   const navigate = useNavigate();
-//   const [formData, setFormData] = useState({
-//   username: '',
-//   email: '',
-//   password: '',
-//   first_name: '',
-//   last_name: '',
-//   address:'',
-//   phone_number: '',
-  
-// });
-
-
-//   const [error, setError] = useState('');
-//   const [success, setSuccess] = useState('');
-
-//   const handleChange = (e) => {
-//     setFormData(prev => ({
-//       ...prev,
-//       [e.target.name]: e.target.value,
-//     }));
-//     setError('');
-//     setSuccess('');
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const response = await axios.post('http://127.0.0.1:8000/user/api/register/', formData);
-//       setSuccess(response.data.message || 'Registration successful!');
-//       console.log(formData)
-//       navigate('/login')
-//     } catch (error) {
-//       console.error('Registration error:', error.response?.data || error.message);
-//       setError(error.response?.data?.message || 'Registration failed.');
-//     }
-//   };
-//   return (
-//     <>
-//     <div className="wrapperreg">
-//     <h2>Register</h2><br/>
-    
-//     <form onSubmit={handleSubmit}>
-//       <div className='inputbox user_name'>
-//         <input type="text" placeholder="Create a username" required name="username" onChange={handleChange}/>
-//       </div>
-      
-//       <div className="inputbox passbox">
-//         <input type="password" placeholder="Enter your password" required name="password" onChange={handleChange}/>
-//       </div>
-//       <div className="inputbox addbox">
-//         <input type="text" placeholder="Enter your address" required name="address" onChange={handleChange}/>
-//       </div>
-      
-//       <div className='row1'>
-//       <div className="inputbox firstbox">
-//         <input type="text" placeholder="Enter your firstname" required name="first_name" onChange={handleChange}/>
-//       </div>
-//       <div className="inputbox lastbox">
-//         <input type="text" placeholder="Enter your lastname" required name="last_name" onChange={handleChange}/>
-//       </div>
-//       </div>
-      
-//       <div className='row2'>
-//       <div className="inputbox emailbox">
-//         <input type="email" placeholder="Enter your email" required name="email" onChange={handleChange}/>
-//       </div>
-//       <div className="inputbox contactbox">
-//         <input type="number" placeholder="Enter your contact number" required name="phone_number"onChange={handleChange}/>
-//       </div>
-//       </div>
-
-
-//       <div className="policy">
-//       </div>
-//       <div className="inputbox button">
-//         <button type="submit">Register</button>
-
-//       </div>
-//       <div className="text">
-//         <h3>Don't have an account? <a href="/login">Login now</a></h3>
-//       </div>
-//       <div className="text">
-//         <h3>Forgot Password? <a href="#">Reset</a></h3>
-//       </div>
-//       {error && <p style={{ color: 'red' }}>{error}</p>}
-//       {success && <p style={{ color: 'green' }}>{success}</p>}
-//     </form>
-//   </div>
-        
-//     </>
-//   )
-// }
-
-// export default Register
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -116,7 +16,11 @@ const Register = () => {
     address: '',
     phone_number: '',
   });
-
+ const validateEmail = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+  
+ };
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -131,6 +35,10 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    if (!validateEmail(formData.email)) {
+       alert("Please enter a valid email address structure.");
+       return;
+      }
     try {
       await axios.post('http://127.0.0.1:8000/user/api/register/', formData);
       navigate('/login');

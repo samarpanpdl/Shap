@@ -17,6 +17,7 @@ import axios from 'axios';
 import { useEffect } from 'react';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
+import Esewa from './Esewa';
 
 const API_URL = "http://localhost:8000";
 
@@ -48,6 +49,7 @@ function App() {
         <Route path='/payment' element={<Payment/>}/>
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/esewa" element ={<Esewa/>}/>
       </Routes>
     </BrowserRouter>
     <Footer /> 

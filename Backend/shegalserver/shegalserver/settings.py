@@ -12,7 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
 
 
 
@@ -100,7 +105,7 @@ EMAIL_USE_TLS = True
 
 # This is the "Login" part
 EMAIL_HOST_USER = 'poudelaashutosh27@gmail.com' # Your actual Gmail address
-EMAIL_HOST_PASSWORD = 'nvowcmlfhakblkei' # The 16-digit App Password you generated
+EMAIL_HOST_PASSWORD = SECRET_KEY # The 16-digit App Password you generated
 
 
 

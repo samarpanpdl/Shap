@@ -1,158 +1,75 @@
-import React from 'react'
-import {useState,useEffect} from "react";
-import {v4 as uuidv4} from "uuid";
-import CryptoJS from "crypto-js";
+import React, { useEffect } from 'react';
+import axios from 'axios'; // Ensure axios is imported
+import { useNavigate } from 'react-router-dom'; // Assuming you use react-router
 
-export const Esewa = () => {
-  const [TheFormData, setTheFormData] = useState({
-    amount: "10",
-    tax_amount: "0",
-    total_amount: "10",
-    transaction_uuid: uuidv4(),
-    product_service_charge: "0",
-    product_delivery_charge: "0",
-    product_code: "EPAYTEST",
-    success_url: "http://localhost:5173/paymentsuccess",
-    failure_url: "http://localhost:5173/paymentfailure",
-    signed_field_names: "total_amount,transaction_uuid,product_code",
-    signature: "",
-    secret: "8gBm/:&EnhH.1/q",
-  });
+export default function Esewa({ formData }) { // Assuming formData comes from props
+  const navigate = useNavigate();
 
-  // generate signature function
-  const generateSignature = (
-    total_amount,
-    transaction_uuid,
-    product_code,
-    secret
-  ) => {
-    const hashString = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
-    const hash = CryptoJS.HmacSHA256(hashString, secret);
-    const hashedSignature = CryptoJS.enc.Base64.stringify(hash);
-    return hashedSignature;
+  const handleGoBack = () => {
+    navigate('/cart');
   };
 
-  // useeffect
   useEffect(() => {
-    const { total_amount, transaction_uuid, product_code, secret } = TheFormData;
-    const hashedSignature = generateSignature(
-      total_amount,
-      transaction_uuid,
-      product_code,
-      secret
-    );
+    const token = localStorage.getItem('access_token');
 
-    setTheFormData({ ...TheFormData, signature: hashedSignature });
-  }, [TheFormData.amount]);
+    // Define the async function inside the effect
+    const processOrder = async () => {
+      try {
+        // 1. Save shipping info
+        await axios.post("http://127.0.0.1:8000/store/ship/", formData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // 2. Confirm Order
+        await axios.post("http://127.0.0.1:8000/store/api/confirm-order/", { method: 'COD' }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // 3. Navigate on success
+        navigate('/', { state: { method: 'COD', success: true } });
+      } catch (error) {
+        console.error("Order processing error:", error);
+        alert("Failed to process COD order.");
+      }
+    };
+
+    if (token) {
+      processOrder();
+    }
+  }, [navigate, formData]); // Dependencies: runs when these change (usually once on mount)
 
   return (
-    <form
-      action="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
-      method="POST"
-    >
-      <h1>Checkout</h1>
-      <div className="field">
-        <label htmlFor="">Amount</label>
-        <input
-          type="text"
-          id="amount"
-          name="amount"
-          autoComplete="off"
-          value={TheFormData.amount}
-          onChange={({ target }) =>
-            setTheFormData({
-              ...TheFormData,
-              amount: target.value,
-              total_amount: target.value,
-            })
-          }
-          required
-        />
+    <div style={{ textAlign: 'center', padding: '40px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #10b981 0%, #ec4899 100%)' }}>
+      <div style={{ animation: 'bounce 1s infinite', fontSize: '60px', marginBottom: '20px' }}>
+        ✓
       </div>
-      <input
-        type="hidden"
-        id="tax_amount"
-        name="tax_amount"
-        value={TheFormData.tax_amount}
-        required
-      />
-      <input
-        type="hidden"
-        id="total_amount"
-        name="total_amount"
-        value={TheFormData.total_amount}
-        required
-      />
-      <input
-        type="hidden"
-        id="transaction_uuid"
-        name="transaction_uuid"
-        value={TheFormData.transaction_uuid}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_code"
-        name="product_code"
-        value={TheFormData.product_code}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_service_charge"
-        name="product_service_charge"
-        value={TheFormData.product_service_charge}
-        required
-      />
-      <input
-        type="hidden"
-        id="product_delivery_charge"
-        name="product_delivery_charge"
-        value={TheFormData.product_delivery_charge}
-        required
-      />
-      <input
-        type="hidden"
-        id="success_url"
-        name="success_url"
-        value={TheFormData.success_url}
-        required
-      />
-      <input
-        type="hidden"
-        id="failure_url"
-        name="failure_url"
-        value={TheFormData.failure_url}
-        required
-      />
-      <input
-        type="hidden"
-        id="signed_field_names"
-        name="signed_field_names"
-        value={TheFormData.signed_field_names}
-        required
-      />
-      <input
-        type="hidden"
-        id="signature"
-        name="signature"
-        value={TheFormData.signature}
-        required
-      />
-
-      <div className="field">
-        <label htmlFor="">First name</label>
-        <input type="text" />
-      </div>
-
-      <div className="field">
-        <label htmlFor="">Last name</label>
-        <input type="text" />
-      </div>
-      <input className="btn" value="Pay via E-Sewa" type="submit" />
-    </form>
+      <h1 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>Processing...</h1>
+      <p style={{ color: '#f0f0f0', fontSize: '18px', marginBottom: '30px' }}>Please wait while we confirm your order.</p>
+      <button 
+        onClick={handleGoBack} 
+        style={{ 
+          padding: '12px 30px', 
+          fontSize: '16px',
+          backgroundColor: '#fff',
+          color: '#10b981',
+          border: 'none',
+          borderRadius: '25px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+        }}
+        onMouseOver={(e) => { e.target.style.transform = 'scale(1.05)'; e.target.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)'; }}
+        onMouseOut={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)'; }}
+      >
+        Go Back
+      </button>
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
+    </div>
   );
-};
-
-export default App;
-
+}

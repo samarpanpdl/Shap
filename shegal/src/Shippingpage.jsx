@@ -39,6 +39,23 @@ const ShippingPage = () => {
 
   const totalCartAmount = cart.items?.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
 
+  const handleCodeSubmit = async () => {
+  // 1. Validation
+    if (!formData.address || !formData.city || !formData.state) {
+      alert("Please fill in all shipping fields first.");
+      return;
+    }
+
+    // 2. Simply navigate to the success/process page
+    // We pass the formData in the 'state' object
+    navigate('/esewa', { 
+      state: { 
+        method: 'COD', 
+        success: true, 
+        shippingData: formData // This is the key part
+      } 
+    });
+};
   // 1. Sync Amount from Cart
   useEffect(() => {
     const amountStr = totalCartAmount.toString();
@@ -144,7 +161,7 @@ const ShippingPage = () => {
             <input type="text" placeholder="Street Name" name="street" value={formData.street} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-rose-500 outline-none" />
 
             <div className="space-y-3 pt-6">
-              <button type="submit" disabled={loading || isCodLoading} className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all flex justify-center items-center gap-2 shadow-lg">
+              <button type="submit" disabled={loading || isCodLoading} onclick={handleCodeSubmit} className="w-full py-4 bg-green-600 text-white font-bold rounded-2xl hover:bg-green-700 transition-all flex justify-center items-center gap-2 shadow-lg">
                 {loading ? "Processing..." : "Pay via eSewa"}
               </button>
 
